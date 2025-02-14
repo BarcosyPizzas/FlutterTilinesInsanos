@@ -7,27 +7,11 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Carrito Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         useMaterial3: true,
       ),
@@ -39,40 +23,60 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
-
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  bool _botonsito = false;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final List<Map<String, dynamic>> products = [
+    {
+      'name': 'Producto 1',
+      'imageUrl': 'https://m.media-amazon.com/images/I/41LuYHUh49L._AC_SX679_.jpg',
+      'quantity': 0
+    },
+    {
+      'name': 'Producto 2',
+      'imageUrl': 'https://m.media-amazon.com/images/I/61ADs13vBlL._AC_SY741_.jpg',
+      'quantity': 0
+    },
+    {
+      'name': 'Producto 3',
+      'imageUrl': 'https://m.media-amazon.com/images/I/71qMvuhHe5L._AC_SX679_.jpg',
+      'quantity': 0
+    },
+    {
+      'name': 'Producto 4',
+      'imageUrl': 'https://m.media-amazon.com/images/I/616iPpF5PEL._AC_SY741_.jpg',
+      'quantity': 0
+    },
+  ];
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  // Función para mostrar una alerta cuando se agrega o elimina un producto
+  void _showAlert(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
-  void _cambiarEstado() {
+
+  void _incrementQuantity(int index) {
     setState(() {
-      _botonsito = true;
+      products[index]['quantity']++;
+    });
+    _showAlert('${products[index]['name']} agregado al carrito 🛒');
+  }
+
+  void _decrementQuantity(int index) {
+    setState(() {
+      if (products[index]['quantity'] > 0) {
+        products[index]['quantity']--;
+        _showAlert('${products[index]['name']} eliminado del carrito ❌');
+      }
     });
   }
 
@@ -83,42 +87,72 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+          children: [
             Text(
               'Tienda de productos online',
-              style: Theme.of(context).textTheme.displayLarge,
+              style: Theme.of(context).textTheme.headlineMedium,
+              textAlign: TextAlign.center,
             ),
-           
-            Padding(
-              padding: const EdgeInsets.all( 20),
-              child:  ElevatedButton(
-                onPressed: () {
-                  if(_formKey.currentState!.validate()){
-                    _cambiarEstado();
-                  }
-                } ,
-                child: const Text('Agregar producto'),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // 2 productos por fila
+                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.network(
+                          products[index]['imageUrl'],
+                          width: 180, // Hacer las imágenes más grandes
+                          height: 180,
+                          fit: BoxFit.cover,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          products[index]['name'],
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove, color: Colors.red),
+                              onPressed: () => _decrementQuantity(index),
+                            ),
+                            Text(
+                              '${products[index]['quantity']}',
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add, color: Colors.green),
+                              onPressed: () => _incrementQuantity(index),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if(_formKey.currentState!.validate()){
-                  _cambiarEstado();
-                }
-              } ,
-              child: const Text('Eliminar producto'),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
